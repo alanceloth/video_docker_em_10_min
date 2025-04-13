@@ -1,0 +1,37 @@
+version: "3.9" # Versão da especificação do Docker Compose
+
+services: # Define os contêineres (serviços) da aplicação
+  web: # Nome do serviço da aplicação web
+    build: . # Constrói a imagem a partir do Dockerfile no diretório atual
+    container_name: fastapi_app # Nome do contêiner
+    ports: # Mapeia portas: <porta_host>:<porta_container>
+      - "8000:8000"
+    volumes: # Mapeia volumes: <caminho_host>:<caminho_container>
+      - ./app:/app # Monta o código da app local para desenvolvimento (alterações refletem sem rebuild)
+    depends_on: # Define dependências de serviço
+      - db # Garante que o serviço 'db' inicie antes do 'web'
+    environment: # Define variáveis de ambiente para o serviço
+      - DATABASE_URL=${DATABASE_URL} # Passa a URL do banco a partir do .env
+
+  db: # Nome do serviço do banco de dados
+    image: postgres:latest # Usa a imagem oficial do PostgreSQL mais recente
+    restart: always # Reinicia o contêiner automaticamente se ele parar
+    ports:
+      - "5432:5432" # Expõe a porta padrão do PostgreSQL
+    container_name: postgres_db # Nome do contêiner
+    environment: # Variáveis para configurar o PostgreSQL (lidas do .env)
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # Monta um volume nomeado para persistir os dados do banco
+      # Mesmo se o contêiner for removido, os dados permanecem no volume 'postgres_data'
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Verifica a saúde do contêiner do banco
+      test: ["CMD", "pg_isready", "-U", "postgres"] # Comando para verificar se o PG está pronto
+      interval: 10s # Intervalo entre verificações
+      timeout: 5s # Tempo máximo para a verificação
+      retries: 5 # Tentativas antes de marcar como não saudável
+
+volumes: # Define volumes nomeados
+  postgres_data: # Nome do volume para persistência dos dados do PostgreSQL

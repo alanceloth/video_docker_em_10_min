@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+
+# Para builds reproduzíveis em produção, é recomendado fixar as versões, ex:
+# fastapi==0.100.0
+# uvicorn[standard]==0.23.2
